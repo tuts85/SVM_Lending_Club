@@ -1,0 +1,71 @@
+# loading dataframe
+
+loans <- read.csv('loan_data.csv',stringsAsFactors = TRUE)
+
+str(loans)
+
+summary(loans)
+
+#converting to factors
+colnames(loans)
+loans$inq.last.6mths <- as.factor(loans$inq.last.6mths)
+loans$delinq.2yrs <- as.factor(loans$delinq.2yrs)
+loans$pub.rec <- as.factor(loans$pub.rec)
+loans$not.fully.paid <- as.factor(loans$not.fully.paid)
+loans$credit.policy <- as.factor(loans$credit.policy)
+
+str(loans)
+
+# EDA
+install.packages("ggplot2")
+library(ggplot2)
+
+ggplot(loans, aes(fico, fill=not.fully.paid)) + geom_histogram(color='black')
+
+ggplot(loans, aes(purpose, fill=not.fully.paid)) + geom_bar(position = 'dodge')
+
+ggplot(loans, aes(int.rate, fico)) +geom_point(aes(color=not.fully.paid),alpha=0.3) + theme_bw()
+
+ggplot(loans, aes(not.fully.paid)) + geom_bar()
+
+## Creating the model
+install.packages("e1071")
+library(e1071)
+
+install.packages("caTools")
+library(caTools)
+
+help("sample.split")
+
+set.seed(101)
+spl <- sample.split(loans$not.fully.paid, SplitRatio = 0.7)
+
+loans.train <- subset(loans, spl == TRUE)
+loans.test <- subset(loans, spl == FALSE)
+
+# Model
+svm.model <- svm(not.fully.paid ~. , loans.train)
+
+summary(svm.model)  
+
+# predict
+
+prediction <- predict(svm.model, loans.test[1:13])
+
+table(prediction, loans.test$not.fully.paid)
+
+# Using tune
+svm.model$gamma
+
+tune.results <- tune(svm,train.x=not.fully.paid~., data=loans.train,kernel='radial', ranges=list(cost=c(1,10), gamma=c(0.1, 1)))
+
+
+
+
+
+
+
+
+
+
+
